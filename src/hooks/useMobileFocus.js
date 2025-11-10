@@ -25,7 +25,8 @@ export const useMobileFocus = (inputRef, dependencies = []) => {
       clearTimeout(timeout1);
       clearTimeout(timeout2);
     };
-  }, dependencies);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputRef, ...dependencies]);
 
   // Folyamatos fókusz ellenőrzés (500ms-enként)
   useEffect(() => {
