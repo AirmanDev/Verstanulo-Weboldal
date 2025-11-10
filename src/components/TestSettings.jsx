@@ -1,21 +1,6 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
-
-/**
- * Beállítások toggle komponens
- */
-const ToggleSwitch = ({ checked, onChange, color = 'green' }) => (
-  <label className="relative inline-block w-14 h-8">
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={(e) => onChange(e.target.checked)}
-      className="sr-only peer"
-    />
-    <div className={`w-14 h-8 bg-gray-300 rounded-full peer peer-checked:bg-${color}-600 transition-colors`}></div>
-    <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform peer-checked:translate-x-6"></div>
-  </label>
-);
+import ToggleSwitch from './common/ToggleSwitch';
 
 /**
  * Teszt beállítások komponens

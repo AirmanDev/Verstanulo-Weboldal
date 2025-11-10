@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as apiService from '../services/apiService';
+import { handleApiError, displayError } from '../utils/errorHandler';
 
 /**
  * Versek kezelése hook - API-val
@@ -33,8 +34,8 @@ export const usePoems = () => {
       setPoems(poemsData);
       setProgressData(progressData);
     } catch (err) {
-      console.error('Hiba a betöltéskor:', err);
-      setError('Nem sikerült betölteni az adatokat. Ellenőrizd, hogy a szerver fut-e.');
+      const appError = handleApiError(err, 'loadPoemsAndProgress');
+      setError(appError.message);
     } finally {
       setLoading(false);
     }
@@ -50,7 +51,8 @@ export const usePoems = () => {
       setPoems([...poems, newPoem]);
       return newPoem.id;
     } catch (err) {
-      throw err;
+      const appError = handleApiError(err, 'addPoem');
+      throw appError;
     }
   };
 
@@ -74,8 +76,8 @@ export const usePoems = () => {
         }
         return true;
       } catch (err) {
-        console.error('Hiba a vers törlésekor:', err);
-        alert('Nem sikerült törölni a verset.');
+        const appError = handleApiError(err, 'deletePoem');
+        displayError(appError);
         return false;
       }
     }
@@ -122,8 +124,8 @@ export const usePoems = () => {
         [poemId]: updatedProgress
       });
     } catch (err) {
-      console.error('Hiba a tanulási haladás mentésekor:', err);
-      throw err;
+      const appError = handleApiError(err, 'saveLearningProgress');
+      throw appError;
     }
   };
 
@@ -150,8 +152,8 @@ export const usePoems = () => {
         [poemId]: updatedProgress
       });
     } catch (err) {
-      console.error('Hiba a teszt haladás mentésekor:', err);
-      throw err;
+      const appError = handleApiError(err, 'saveTestProgress');
+      throw appError;
     }
   };
 
@@ -167,8 +169,8 @@ export const usePoems = () => {
       delete newProgressData[poemId];
       setProgressData(newProgressData);
     } catch (err) {
-      console.error('Hiba a haladás törlésekor:', err);
-      throw err;
+      const appError = handleApiError(err, 'clearProgress');
+      throw appError;
     }
   };
 

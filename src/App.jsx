@@ -5,6 +5,7 @@ import { useLearningState } from './hooks/useLearningState';
 import { useSettings } from './hooks/useSettings';
 import { calculateLearningStats, calculateTestStats } from './utils/progressUtils';
 import { normalizeText } from './utils/textUtils';
+import { displayError } from './utils/errorHandler';
 
 // Komponensek
 import Menu from './components/Menu';
@@ -55,7 +56,7 @@ export default function PoemLearningApp() {
       await poems.addPoem(poemData);
       setMode(MODES.MENU);
     } catch (error) {
-      alert(error.message || 'Hiba történt a vers mentésekor');
+      displayError(error);
     }
   };
 
@@ -87,8 +88,7 @@ export default function PoemLearningApp() {
         await poems.saveLearningProgress(poems.selectedPoemId, learningState.getProgressData());
         setMode(MODES.SUMMARY);
       } catch (error) {
-        console.error('Hiba a haladás mentésekor:', error);
-        alert('Nem sikerült menteni a haladást');
+        displayError(error);
       }
     } else {
       learningState.resetProgress();

@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
+const { validatePoem, validateProgress, validateUserId, validatePoemId } = require('./validation');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -109,6 +110,13 @@ async function saveProgress(progress) {
 // API Endpointok
 
 /**
+ * Health check
+ */
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+/**
  * Összes vers lekérése
  */
 app.get('/api/poems', async (req, res) => {
@@ -125,13 +133,16 @@ app.get('/api/poems', async (req, res) => {
  */
 app.post('/api/poems', async (req, res) => {
   try {
-    const { title, author, year, stanzas } = req.body;
-    
     // Validáció
-    if (!title || !author || !stanzas || stanzas.length === 0) {
-      return res.status(400).json({ error: 'Hiányzó kötelező mezők' });
+    const validation = validatePoem(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ 
+        error: validation.message,
+        field: validation.field 
+      });
     }
     
+    const { title, author, year, stanzas } = req.body;
     const poems = await loadPoems();
     
     // Duplikáció ellenőrzése
@@ -154,10 +165,10 @@ app.post('/api/poems', async (req, res) => {
     // Új vers létrehozása
     const newPoem = {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      title,
-      author,
-      year,
-      stanzas,
+      title: title.trim(),
+      author: author.trim(),
+      year: year ? year.trim() : '',
+      stanzas: stanzas.map(s => s.trim()),
       createdAt: new Date().toISOString()
     };
     
@@ -172,13 +183,19 @@ app.post('/api/poems', async (req, res) => {
 });
 
 /**
- * Vers törlése (opcionális - admin funkcióhoz)
+ * Vers törlése
  */
 app.delete('/api/poems/:poemId', async (req, res) => {
   try {
     const { poemId } = req.params;
-    const poems = await loadPoems();
     
+    // Validáció
+    const validation = validatePoemId(poemId);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+    
+    const poems = await loadPoems();
     const filteredPoems = poems.filter(p => p.id !== poemId);
     
     if (filteredPoems.length === poems.length) {
@@ -208,8 +225,19 @@ app.delete('/api/poems/:poemId', async (req, res) => {
 app.get('/api/progress/:userId/:poemId', async (req, res) => {
   try {
     const { userId, poemId } = req.params;
-    const progress = await loadProgress();
     
+    // Validáció
+    const userValidation = validateUserId(userId);
+    if (!userValidation.valid) {
+      return res.status(400).json({ error: userValidation.message });
+    }
+    
+    const poemValidation = validatePoemId(poemId);
+    if (!poemValidation.valid) {
+      return res.status(400).json({ error: poemValidation.message });
+    }
+    
+    const progress = await loadProgress();
     const userProgress = progress[userId]?.[poemId] || null;
     res.json(userProgress);
   } catch (error) {
@@ -223,8 +251,14 @@ app.get('/api/progress/:userId/:poemId', async (req, res) => {
 app.get('/api/progress/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const progress = await loadProgress();
     
+    // Validáció
+    const validation = validateUserId(userId);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.message });
+    }
+    
+    const progress = await loadProgress();
     const userProgress = progress[userId] || {};
     res.json(userProgress);
   } catch (error) {
@@ -239,6 +273,22 @@ app.put('/api/progress/:userId/:poemId', async (req, res) => {
   try {
     const { userId, poemId } = req.params;
     const progressData = req.body;
+    
+    // Validáció
+    const userValidation = validateUserId(userId);
+    if (!userValidation.valid) {
+      return res.status(400).json({ error: userValidation.message });
+    }
+    
+    const poemValidation = validatePoemId(poemId);
+    if (!poemValidation.valid) {
+      return res.status(400).json({ error: poemValidation.message });
+    }
+    
+    const progressValidation = validateProgress(progressData);
+    if (!progressValidation.valid) {
+      return res.status(400).json({ error: progressValidation.message });
+    }
     
     const progress = await loadProgress();
     
@@ -265,6 +315,18 @@ app.put('/api/progress/:userId/:poemId', async (req, res) => {
 app.delete('/api/progress/:userId/:poemId', async (req, res) => {
   try {
     const { userId, poemId } = req.params;
+    
+    // Validáció
+    const userValidation = validateUserId(userId);
+    if (!userValidation.valid) {
+      return res.status(400).json({ error: userValidation.message });
+    }
+    
+    const poemValidation = validatePoemId(poemId);
+    if (!poemValidation.valid) {
+      return res.status(400).json({ error: poemValidation.message });
+    }
+    
     const progress = await loadProgress();
     
     if (progress[userId]?.[poemId]) {

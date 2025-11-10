@@ -10,6 +10,7 @@ export { default as LearningSummary } from './components/LearningSummary';
 export { default as TestSettings } from './components/TestSettings';
 export { default as Test } from './components/Test';
 export { default as TestSummary } from './components/TestSummary';
+export { default as ToggleSwitch } from './components/common/ToggleSwitch';
 
 // Export all hooks
 export { usePoems } from './hooks/usePoems';
@@ -21,12 +22,11 @@ export { useSettings } from './hooks/useSettings';
 
 // Export all utils
 export * from './utils/textUtils';
-export * from './utils/storageUtils';
 export * from './utils/progressUtils';
+export * from './utils/errorHandler';
 
 // Export all constants
 export * from './constants/modes';
-export * from './constants/storage';
 
 // Export main App
 export { default } from './App';

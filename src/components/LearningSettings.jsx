@@ -1,21 +1,6 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
-
-/**
- * Beállítások toggle komponens
- */
-const ToggleSwitch = ({ checked, onChange }) => (
-  <label className="relative inline-block w-14 h-8">
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={(e) => onChange(e.target.checked)}
-      className="sr-only peer"
-    />
-    <div className="w-14 h-8 bg-gray-300 rounded-full peer peer-checked:bg-indigo-600 transition-colors"></div>
-    <div className="absolute left-1 top-1 w-6 h-6 bg-white rounded-full transition-transform peer-checked:translate-x-6"></div>
-  </label>
-);
+import ToggleSwitch from './common/ToggleSwitch';
 
 /**
  * Tanulás beállítások komponens
@@ -47,7 +32,7 @@ const LearningSettings = ({
               <h3 className="font-semibold text-gray-800">Kis és nagybetű számít</h3>
               <p className="text-sm text-gray-600">Különbséget tesz a kis és nagybetűk között</p>
             </div>
-            <ToggleSwitch checked={caseSensitive} onChange={onCaseSensitiveChange} />
+            <ToggleSwitch checked={caseSensitive} onChange={onCaseSensitiveChange} color="indigo" />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -55,7 +40,7 @@ const LearningSettings = ({
               <h3 className="font-semibold text-gray-800">Írásjelek is kellenek</h3>
               <p className="text-sm text-gray-600">Pontokat, vesszőket stb. is be kell írni</p>
             </div>
-            <ToggleSwitch checked={requirePunctuation} onChange={onRequirePunctuationChange} />
+            <ToggleSwitch checked={requirePunctuation} onChange={onRequirePunctuationChange} color="indigo" />
           </div>
         </div>
 
