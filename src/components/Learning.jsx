@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { ROUNDS } from '../constants/modes';
 import { calculateProgress } from '../utils/progressUtils';
 import { getLetterIndices, getWordIndexForChar } from '../utils/textUtils';
 import { useLearningLogic } from '../hooks/useLearningLogic';
 import { useLearningKeyboard } from '../hooks/useLearningKeyboard';
 import { useAutoHintTimer } from '../hooks/useAutoHintTimer';
+import { useMobileFocus } from '../hooks/useMobileFocus';
+import { useAutoScroll } from '../hooks/useAutoScroll';
 import StanzaRenderer from './StanzaRenderer';
 
 /**
@@ -31,6 +33,9 @@ const Learning = ({
     containerRef
   } = learningState;
 
+  const inputRef = useRef(null);
+  const stanzaContainerRef = useRef(null);
+
   const logic = useLearningLogic(
     learningState,
     poem,
@@ -50,45 +55,42 @@ const Learning = ({
     logic.moveToNext
   );
 
+  // Mobil fókusz kezelés (billentyűzet mindig látható)
+  const { handleBlur } = useMobileFocus(inputRef, [currentStanzaIndex, repeatCount, currentRound]);
+
+  // Automatikus görgetés az aktuális karakterhez (mobil)
+  useAutoScroll(stanzaContainerRef, currentCharIndex, userTypedChars);
+
   // Auto hint timer
   useAutoHintTimer(learningState, currentStanza, requirePunctuation, true);
 
-  // Fókusz kezelés
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.focus();
-      
-      const focusTimeout = setTimeout(() => {
-        if (containerRef.current) {
-          containerRef.current.focus();
-        }
-      }, 100);
-      
-      return () => clearTimeout(focusTimeout);
-    }
-  }, [currentStanzaIndex, repeatCount, currentRound, userTypedChars, containerRef]);
-
-  // Ablak fókusz visszatéréskor
-  useEffect(() => {
-    const handleWindowFocus = () => {
-      if (containerRef.current) {
-        containerRef.current.focus();
+  /**
+   * Billentyűzet esemény kezelő - fókusz megtartással
+   */
+  const handleKeyDownWithFocus = (e) => {
+    keyboard.handleKeyDown(e);
+    // Fókusz visszaadása mobilon
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
       }
-    };
-    
-    window.addEventListener('focus', handleWindowFocus);
-    return () => window.removeEventListener('focus', handleWindowFocus);
-  }, [containerRef]);
+    }, 0);
+  };
 
-  const progress = calculateProgress(poem, currentRound, currentStanzaIndex, repeatCount);
-
+  /**
+   * Konténer klikk kezelő - fókusz aktiválás
+   */
   const handleContainerClick = () => {
-    if (containerRef.current) {
-      containerRef.current.focus();
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
   };
 
-  // Automatikus hint progress bar mutatása
+  const progress = calculateProgress(poem, currentRound, currentStanzaIndex, repeatCount);
+
+  /**
+   * Automatikus hint progress bar láthatóságának meghatározása
+   */
   const showAutoHintProgress = currentRound === ROUNDS.SECOND && (() => {
     if (currentCharIndex < letterIndices.length) {
       const charIndex = letterIndices[currentCharIndex];
@@ -130,23 +132,51 @@ const Learning = ({
 
           {/* Versszak megjelenítés */}
           <div 
-            ref={containerRef}
-            tabIndex={0}
-            onKeyDown={keyboard.handleKeyDown}
-            className="bg-blue-50 p-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            autoFocus
+            ref={stanzaContainerRef}
+            className="relative"
           >
-            <StanzaRenderer
-              stanza={currentStanza}
-              currentRound={currentRound}
-              currentCharIndex={currentCharIndex}
-              userTypedChars={userTypedChars}
-              hintedWords={hintedWords}
-              hoveredWord={hoveredWord}
-              requirePunctuation={requirePunctuation}
-              onWordHint={logic.handleWordHint}
-              onWordHover={logic.handleWordHover}
+            {/* Rejtett input mező mobilon a billentyűzet előhozásához */}
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              onKeyDown={handleKeyDownWithFocus}
+              onBlur={handleBlur}
+              className="absolute w-1 h-1 opacity-0"
+              style={{ 
+                position: 'absolute', 
+                top: '-9999px', 
+                left: '-9999px',
+                pointerEvents: 'none',
+                fontSize: '16px', // iOS zoom megakadályozása
+                caretColor: 'transparent' // Kurzor elrejtése
+              }}
+              aria-hidden="true"
+              autoFocus
             />
+            <div 
+              ref={containerRef}
+              tabIndex={0}
+              onKeyDown={handleKeyDownWithFocus}
+              className="bg-blue-50 p-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+              autoFocus
+            >
+              <StanzaRenderer
+                stanza={currentStanza}
+                currentRound={currentRound}
+                currentCharIndex={currentCharIndex}
+                userTypedChars={userTypedChars}
+                hintedWords={hintedWords}
+                hoveredWord={hoveredWord}
+                requirePunctuation={requirePunctuation}
+                onWordHint={logic.handleWordHint}
+                onWordHover={logic.handleWordHover}
+              />
+            </div>
           </div>
 
           {/* Automatikus hint progress bar */}

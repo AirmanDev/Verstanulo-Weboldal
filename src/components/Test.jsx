@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useMobileFocus } from '../hooks/useMobileFocus';
 
 /**
- * Teszt komponens
+ * Teszt komponens - versszak beírása memóriából
  */
 const Test = ({ poem, currentStanzaIndex, onSubmit, onExit }) => {
   const [testInput, setTestInput] = useState('');
+  const textareaRef = useRef(null);
+
+  // Mobil fókusz kezelés
+  useMobileFocus(textareaRef, [currentStanzaIndex]);
 
   const handleSubmit = () => {
     if (testInput.trim()) {
@@ -33,12 +38,18 @@ const Test = ({ poem, currentStanzaIndex, onSubmit, onExit }) => {
 
           <div className="space-y-4">
             <textarea
+              ref={textareaRef}
               value={testInput}
               onChange={(e) => setTestInput(e.target.value)}
               onKeyPress={handleKeyPress}
               className="w-full p-4 border-2 border-green-300 rounded-lg focus:outline-none focus:border-green-500 min-h-48"
               placeholder="Írd be a versszakot... (Enter a beküldéshez)"
               autoFocus
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
             />
             <button
               onClick={handleSubmit}

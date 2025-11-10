@@ -204,6 +204,7 @@ export default function PoemLearningApp() {
       return (
         <PoemList
           poems={poems.poems}
+          progressData={poems.progressData}
           onSelectPoem={handleSelectPoem}
           onDeletePoem={poems.deletePoem}
           onBack={() => handleNavigate(MODES.MENU)}
